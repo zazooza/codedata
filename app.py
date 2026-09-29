@@ -31,6 +31,7 @@ def home():
         classes = get_classes()
         return render_template("index.html", classes=classes, error=None)
     except Exception:
+        app.logger.exception("Database request failed")
         return render_template(
             "index.html", classes=[], error="เชื่อมต่อฐานข้อมูลไม่สำเร็จ กรุณาตรวจการตั้งค่าหรือแจ้งผู้ดูแลระบบ"
         ), 500
