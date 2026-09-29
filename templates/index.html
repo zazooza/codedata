@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบฟิตเนส</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🏋️ ระบบฟิตเนส <span>Fitness System</span></div>
+    <nav><a href="/" class="active">คลาสฟิตเนส</a></nav>
+  </header>
+  <main class="container">
+    <section class="intro">
+      <h1>ตารางคลาสฟิตเนส</h1>
+      <p>ดูคลาส เทรนเนอร์ ห้องเรียน และเวลาที่จัดคลาส</p>
+    </section>
+    <section class="card">
+      <h3>ค้นหาคลาส</h3>
+      <div class="search-grid">
+        <div class="field">
+          <label for="search">ชื่อคลาส ห้อง หรือเวลา</label>
+          <input id="search" type="search" placeholder="พิมพ์เพื่อค้นหา..." autocomplete="off">
+        </div>
+      </div>
+      <div class="btn-row">
+        <span class="status">ทั้งหมด {{ classes|length }} คลาส</span>
+        <button class="btn primary" type="button" onclick="document.getElementById('search').value=''; filterClasses();">ล้างการค้นหา</button>
+      </div>
+    </section>
+    <section class="card">
+      {% if error %}<div class="status err">{{ error }}</div>{% endif %}
+      <div class="table-wrap">
+        <table id="classTable">
+          <thead><tr><th>รหัส</th><th>ชื่อคลาส</th><th>ห้อง</th><th>จำนวนคน</th><th>เวลา</th></tr></thead>
+          <tbody>
+            {% for item in classes %}
+            <tr>
+              <td>{{ item.class_id }}</td><td class="class-name">{{ item.name }}</td>
+              <td>{{ item.room or '—' }}</td><td>{{ item.capacity }}</td>
+              <td>{{ item.schedule_time }}</td>
+            </tr>
+            {% else %}
+            {% if not error %}<tr><td colspan="5" class="empty">ยังไม่มีข้อมูลคลาส</td></tr>{% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script>
+    const searchInput = document.getElementById('search');
+    function filterClasses() {
+      const term = searchInput.value.trim().toLocaleLowerCase();
+      document.querySelectorAll('#classTable tbody tr').forEach(row => {
+        row.hidden = !row.innerText.toLocaleLowerCase().includes(term);
+      });
+    }
+    searchInput.addEventListener('input', filterClasses);
+  </script>
+</body>
+</html>
