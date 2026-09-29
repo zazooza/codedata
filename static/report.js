@@ -1,5 +1,65 @@
-const $=s=>document.querySelector(s);
-async function api(url){const response=await fetch(url);const body=await response.json();if(!response.ok||!body.ok)throw Error(body.error||"โหลดข้อมูลไม่สำเร็จ");return body.data}
-function table(sel,rows){const t=$(sel),head=t.querySelector("thead"),body=t.querySelector("tbody");head.replaceChildren();body.replaceChildren();if(!rows.length)return;const cols=Object.keys(rows[0]),hr=document.createElement("tr");for(const c of cols){const th=document.createElement("th");th.textContent=c;hr.append(th)}head.append(hr);for(const row of rows){const tr=document.createElement("tr");for(const c of cols){const td=document.createElement("td");td.textContent=row[c]??"—";tr.append(td)}body.append(tr)}}
-async function load(){try{const summary=await api("/api/reports/summary"),box=$("#summary");const labels={members:"สมาชิก",trainers:"เทรนเนอร์",classes:"คลาส",bookings:"การจอง",equipment:"อุปกรณ์"};box.replaceChildren(...Object.entries(labels).map(([key,label])=>{const card=document.createElement("div");card.className="metric";const num=document.createElement("div");num.className="metric-num";num.textContent=summary[key]??0;const text=document.createElement("div");text.className="metric-label";text.textContent=label;card.append(num,text);return card}));table("#popularTable",await api("/api/reports/popular-classes"));table("#statusTable",await api("/api/reports/booking-status"));$("#popularStatus").textContent="";$("#statusStatus").textContent=""}catch(e){$("#popularStatus").textContent=e.message;$("#popularStatus").className="status err"}}
-load();
+const $ = (selector) => document.querySelector(selector);
+const labels = { class_name: "ชื่อคลาส", booking_count: "จำนวนการจอง", status: "สถานะ" };
+
+async function api(url) {
+  const response = await fetch(url);
+  const result = await response.json();
+  if (!response.ok || !result.ok) throw new Error(result.error || "โหลดรายงานไม่สำเร็จ");
+  return result.data;
+}
+
+function renderTable(selector, rows) {
+  const table = $(selector);
+  const head = table.querySelector("thead");
+  const body = table.querySelector("tbody");
+  head.replaceChildren();
+  body.replaceChildren();
+  if (!rows.length) return;
+  const columns = Object.keys(rows[0]);
+  const headerRow = document.createElement("tr");
+  for (const column of columns) {
+    const th = document.createElement("th");
+    th.textContent = labels[column] || column;
+    headerRow.append(th);
+  }
+  head.append(headerRow);
+  for (const row of rows) {
+    const tr = document.createElement("tr");
+    for (const column of columns) {
+      const td = document.createElement("td");
+      td.textContent = row[column] ?? "—";
+      tr.append(td);
+    }
+    body.append(tr);
+  }
+}
+
+async function loadReports() {
+  try {
+    const summary = await api("/api/reports/summary");
+    const summaryLabels = {
+      members: "สมาชิก", trainers: "เทรนเนอร์", classes: "คลาส",
+      bookings: "การจอง", equipment: "อุปกรณ์"
+    };
+    const cards = Object.entries(summaryLabels).map(([key, label]) => {
+      const card = document.createElement("div");
+      card.className = "metric";
+      const number = document.createElement("div");
+      number.className = "metric-num";
+      number.textContent = summary[key] ?? 0;
+      const caption = document.createElement("div");
+      caption.className = "metric-label";
+      caption.textContent = label;
+      card.append(number, caption);
+      return card;
+    });
+    $("#summary").replaceChildren(...cards);
+    renderTable("#popularTable", await api("/api/reports/popular-classes"));
+    renderTable("#statusTable", await api("/api/reports/booking-status"));
+  } catch (error) {
+    $("#popularStatus").textContent = error.message;
+    $("#popularStatus").className = "status err";
+  }
+}
+
+loadReports();
